@@ -76,7 +76,7 @@ def plot(dates, all_vals, ylab,close=True):
     plt.ylabel(ylab)
     plt.savefig("plot.png", dpi=300, bbox_inches='tight')
     # if close:
-    #     plt.close()
+    plt.close()
     # plt.imsave(white, 'white.png', dpi=300, bbox_inches='tight')
     # x = [0, 2, 4, 6,10,11]
     # y = [1, 3, 4, 8,9,6]
