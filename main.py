@@ -19,18 +19,53 @@ def Actions(ui):
     ui.pushButton_4.clicked.connect(plot_individual)
 
 def SingleETOcalculator():
-    press      = float(ui.pressureLineEdit.text())
-    temp       = float(ui.temperatureLineEdit.text())
-    wind_speed = float(ui.wind_speedLineEdit.text())
-    rel_hum    = float(ui.relativeHumidityLineEdit.text())
-    dew_temp   = float(ui.dewPointTemperatureLineEdit.text())
-    g		   = float(ui.psychrometricConstantLineEdit.text())
-    Rn        =  float(ui.solarRadiationLineEdit.text())
-    G         =  float(ui.soilHeatFluxDensityLineEdit.text())
-    D          = float(ui.slopeVapourPressureCurveLineEdit.text())
+    try:
+        press      = float(ui.pressureLineEdit.text())
+    except:
+        press = None
+    
+    try:
+        temp       = float(ui.temperatureLineEdit.text())
+    except:
+        temp = None
+    try:
+        wind_speed = float(ui.wind_speedLineEdit.text())
+    except:
+        wind_speed = None
+    try:
+        rel_hum    = float(ui.relativeHumidityLineEdit.text())
+    except:
+        rel_hum = None
+    try:
+        dew_temp   = float(ui.dewPointTemperatureLineEdit.text())
+    except:
+        dew_temp = None
+    try:
+        g		   = float(ui.psychrometricConstantLineEdit.text())
+    except:
+        g = None
+    try:
+        Rn        =  float(ui.solarRadiationLineEdit.text())
+    except:
+        Rn = None
+    try:
+        G         =  float(ui.soilHeatFluxDensityLineEdit.text())
+    except:
+        G = None
+    try:
+        D          = float(ui.slopeVapourPressureCurveLineEdit.text())
+    except:
+        D = None
+    try:
+        prec = float(ui.precipitationLineEdit.text())
+    except:
+        prec = None
     pet_tool = pet.PET(press, temp, dew_temp, rel_hum, wind_speed, None,None,g, G, D, Rn, False)
     ans = pet_tool.penman()
-    ui.label_14.setText(str(ans))
+    aet_tool = pet.AET(prec, ans)
+    aetans = aet_tool.zhang()
+    ui.label_16.setText(str(ans)+" mm")
+    ui.label_14.setText(str(aetans)+" mm")
 
 
 def plot(dates, all_vals, ylab):
@@ -93,20 +128,25 @@ def FileETOcalculator():
     global filename
     df = pd.read_csv(filename)
     all_vals = []
+    all_aet_vals = []
     dates = []
-    # for i in range(len(df)):
-    for i in range(min(30,len(df))):
+    for i in range(len(df)):
+    # for i in range(min(30,len(df))):
         # print(float(df.iloc[i,0+3]),float(df.iloc[i,1+3]),float(df.iloc[i,2+3]),float(df.iloc[i,3+3]),float(df.iloc[i,4+3]),float(df.iloc[i,5+3]),float(df.iloc[i,6+3]))
         pet_tool = pet.PET(float(df.iloc[i,0+3]),float(df.iloc[i,1+3]),float(df.iloc[i,2+3]),float(df.iloc[i,3+3]),float(df.iloc[i,4+3]),float(df.iloc[i,5+3]),float(df.iloc[i,6+3]),None,None,None,None,True)
         ans = pet_tool.penman()
         if ans is not np.nan:
             all_vals.append(ans)
+            aet_tool = pet.AET(float(df.iloc[i,7+3]), ans)
+            aet_v = aet_tool.zhang()
+            all_aet_vals.append(aet_v)
             dates.append(str(df.iloc[i,0])+"-"+str(df.iloc[i,1])+"-"+str(df.iloc[i,2]))
         else:
             all_vals.append(ans)
         # break
     # print(df)
-    df['ETo'] = all_vals
+    df['PETo'] = all_vals
+    df['AETo'] = all_aet_vals
     df.to_csv("output.csv")
     plot(dates, all_vals, "ETo")
     # ui.label_15.setPixmap(QtGui.QPixmap("a.png"))

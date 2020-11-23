@@ -23,6 +23,15 @@ class PET():
         self.calculate()
 
     def calculate(self):
+        if self.press is None:
+            self.press = 100.0
+        if self.Tav is None:
+            self.Tav = 27
+            self.temp = 27
+        if self.dew_temp is None:
+            self.dew_temp = 27
+        if self.rel_hum is None:
+            self.rel_hum = 30 
         if self.D is None:
             self.D = (4098*0.618*math.exp((17.27*self.Tav)/(self.Tav+237.3)))/((self.Tav+237.3)**2)
         self.ea = 0.61*math.exp((17.27*self.dew_temp)/(self.dew_temp+237.3))
@@ -61,6 +70,8 @@ class AET():
         return est;
 
     def zhang(self):
+        if self.P==0:
+            return 0
         est = self.P*self.pet*(1-math.exp(-self.pet/self.P))*math.tanh(self.P/self.pet)
         est = math.sqrt(est)
         return est
