@@ -64,8 +64,8 @@ def SingleETOcalculator():
     ans = pet_tool.penman()
     aet_tool = pet.AET(prec, ans)
     aetans = aet_tool.zhang()
-    ui.label_16.setText(str(ans)+" mm")
-    ui.label_14.setText(str(aetans)+" mm")
+    ui.label_16.setText(str(round(ans,2))+" mm")
+    ui.label_14.setText(str(round(aetans,2))+" mm")
 
 
 def plot(dates, all_vals, ylab,close=True):
@@ -91,7 +91,7 @@ def plot_individual():
     # filename = ui.label_13.text()
     global filename
     df = pd.read_csv(filename)
-    poss_labs = ["Pressure", "Temperature", "Dew point Temperature", "Relative Humidity","Wind Speed"]
+    poss_labs = ["Pressure(kPa)", "Temperature(°C)", "Dew point Temperature(°C)", "Relative Humidity(%)","Wind Speed(m/s)","Precipitation(mm)"]
     checked_op = None
     if ui.radioButton.isChecked(): #pressure
         checked_op=0
@@ -103,14 +103,20 @@ def plot_individual():
         checked_op=3
     elif ui.radioButton_5.isChecked(): #dew temp
         checked_op=2
-
+    elif ui.radioButton_6.isChecked(): #dew temp
+        checked_op=5
+    date = ui.dateEdit.date().toString(Qt.ISODate)
+    # print(date)
+    new_df =df.loc[df["Year"]==int(date[:4])]
+    new_df = new_df.loc[new_df["Month"]==int(date[5:7])]
+    # print(new_df)
     vals = []
     dates = []    
-    for i in range(min(30,len(df))):
-        if df.iloc[i,checked_op+3] is np.nan:
+    for i in range(len(new_df)):
+        if new_df.iloc[i,checked_op+3] is np.nan:
             continue
-        vals.append(df.iloc[i,checked_op+3])
-        dates.append(str(df.iloc[i,0])+"-" +str(df.iloc[i,1])+"-"+str(df.iloc[i,2]))
+        vals.append(new_df.iloc[i,checked_op+3])
+        dates.append(str(new_df.iloc[i,0])+"-" +str(new_df.iloc[i,1])+"-"+str(df.iloc[i,2]))
     plot(dates, vals, poss_labs[checked_op])
     # ui.label_15.clear()
     # ui.label_15.setPixmap(1,0)
@@ -123,11 +129,23 @@ def Filepicker():
     global filename
     filename = name
     ui.label_13.setText(name.split("/")[-1].split(".")[0])
+    df = pd.read_csv(filename)
+    min_y,max_y= df["Year"].min(),df["Year"].max()
+    print(min_y,max_y)
+    print(QtCore.QDate(min_y,1,1))
+    # QtCore.QDate(max_y,31,12)
+    ui.dateEdit.setMinimumDate(QtCore.QDate(min_y,1,1))
+    ui.dateEdit.setDate(QtCore.QDate(min_y,1,1))
+    ui.dateEdit.setMaximumDate(QtCore.QDate(max_y,12,31))
+
 
 def FileETOcalculator():
     # filename = ui.label_13.text()
     global filename
     df = pd.read_csv(filename)
+
+        # break
+    # print(df)
     all_vals = []
     all_aet_vals = []
     dates = []
@@ -144,11 +162,40 @@ def FileETOcalculator():
             dates.append(str(df.iloc[i,0])+"-"+str(df.iloc[i,1])+"-"+str(df.iloc[i,2]))
         else:
             all_vals.append(ans)
-        # break
-    # print(df)
     df['PETo'] = all_vals
     df['AETo'] = all_aet_vals
-    df.to_csv("output.csv")
+
+
+
+    date = ui.dateEdit.date().toString(Qt.ISODate)
+    # print(date)
+    new_df =df.loc[df["Year"]==int(date[:4])]
+    new_df = new_df.loc[new_df["Month"]==int(date[5:7])]
+
+
+    all_vals = []
+    all_aet_vals = []
+    dates = []
+    for i in range(len(new_df)):
+    # for i in range(min(30,len(df))):
+        # print(float(df.iloc[i,0+3]),float(df.iloc[i,1+3]),float(df.iloc[i,2+3]),float(df.iloc[i,3+3]),float(df.iloc[i,4+3]),float(df.iloc[i,5+3]),float(df.iloc[i,6+3]))
+        pet_tool = pet.PET(float(new_df.iloc[i,0+3]),float(new_df.iloc[i,1+3]),float(new_df.iloc[i,2+3]),float(new_df.iloc[i,3+3]),float(new_df.iloc[i,4+3]),float(new_df.iloc[i,5+3]),float(new_df.iloc[i,6+3]),None,None,None,None,True)
+        ans = pet_tool.penman()
+        if ans is not np.nan:
+            all_vals.append(ans)
+            aet_tool = pet.AET(float(new_df.iloc[i,7+3]), ans)
+            aet_v = aet_tool.zhang()
+            all_aet_vals.append(aet_v)
+            dates.append(str(new_df.iloc[i,0])+"-"+str(new_df.iloc[i,1])+"-"+str(new_df.iloc[i,2]))
+        else:
+            all_vals.append(ans)
+
+
+    output_filename = ui.lineEdit.text()
+    # print(output_filename)
+    if output_filename =="":
+        output_filename = "output"
+    df.to_csv(output_filename+".csv")
     # plot(dates, all_vals, "ETo",False)
     # plot(dates, all_aet_vals, "ETo",False)
     fileplot(dates,all_vals,all_aet_vals)
