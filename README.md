@@ -7,6 +7,3 @@ The below package could be used for calculating drought indices.</br>
 ### Package installation
 pip install climate-indices
 
-### Running code
-python3 main.py
-
