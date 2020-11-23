@@ -1,18 +1,20 @@
 import math
 class PET():
-    def __init__(self, press, temp, dew_temp, rel_hum, wind_speed, wind_dir, soil_moist):
+    def __init__(self, press, temp, dew_temp, rel_hum, wind_speed, wind_dir, soil_moist, g, G,D,Rn, isFile):
         super().__init__()
-        self.press = 0.1*press # to convert to kpa from hpa
+        self.press = press
+        if isFile:
+            self.press = 0.1*press # to convert to kpa from hpa
         self.temp = temp
         self.dew_temp = dew_temp
         self.rel_hum = rel_hum
         self.wind_speed = wind_speed
         self.wind_dir = wind_dir
         self.soil_moist = soil_moist
-        self.Rn = 0.19 #for now. Until we find a proper formula
-        self.G = 0 #since daily being used
-        self.g = None
-        self.D = None
+        self.Rn = Rn #for now. Until we find a proper formula
+        self.G = G #since daily being used
+        self.g = g
+        self.D = D
         self.Tav = temp
         self.u2=wind_speed
         self.es = None
@@ -21,12 +23,18 @@ class PET():
         self.calculate()
 
     def calculate(self):
-        self.D = (4098*0.618*math.exp((17.27*self.Tav)/(self.Tav+237.3)))/((self.Tav+237.3)**2)
+        if self.D is None:
+            self.D = (4098*0.618*math.exp((17.27*self.Tav)/(self.Tav+237.3)))/((self.Tav+237.3)**2)
         self.ea = 0.61*math.exp((17.27*self.dew_temp)/(self.dew_temp+237.3))
         # self.ea = self.es*(self.rel_hum/100)
         self.es = 100*self.ea/self.rel_hum
         self.latent_heat_vap = 2.501-2.361*0.001*self.temp
-        self.g = 0.00163*self.press/self.latent_heat_vap
+        if self.g is None:
+            self.g = 0.00163*self.press/self.latent_heat_vap
+        if self.Rn is None:
+            self.Rn = 0.19
+        if self.G is None:
+            self.G = 0
     
 
     def hargreaves(self):
@@ -57,5 +65,6 @@ class AET():
         est = math.sqrt(est)
         return est
 
-# pet = PET(10101,24.33,13.8,49.67,2.06,136,17.96)
+# pet = PET(10101,24.33,13.8,49.67,2.06,136,17.96,None,None,None,None,True)
+# pet = PET(1010.5666669999999,24.33333333,13.8,49.672912100000005,2.06,136,17.96149722,None,None,None,None,True)
 # print(pet.penman())
