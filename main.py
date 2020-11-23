@@ -68,14 +68,15 @@ def SingleETOcalculator():
     ui.label_14.setText(str(aetans)+" mm")
 
 
-def plot(dates, all_vals, ylab):
+def plot(dates, all_vals, ylab,close=True):
     # df = pd.DataFrame(all_vals, index=dates)
     plt.bar(dates, height = all_vals)
     plt.xticks(rotation='vertical')
     plt.xlabel('Date')
     plt.ylabel(ylab)
     plt.savefig("plot.png", dpi=300, bbox_inches='tight')
-    plt.close()
+    # if close:
+    #     plt.close()
     # plt.imsave(white, 'white.png', dpi=300, bbox_inches='tight')
     # x = [0, 2, 4, 6,10,11]
     # y = [1, 3, 4, 8,9,6]
@@ -148,13 +149,35 @@ def FileETOcalculator():
     df['PETo'] = all_vals
     df['AETo'] = all_aet_vals
     df.to_csv("output.csv")
-    plot(dates, all_vals, "ETo")
+    # plot(dates, all_vals, "ETo",False)
+    # plot(dates, all_aet_vals, "ETo",False)
+    fileplot(dates,all_vals,all_aet_vals)
+
+
     # ui.label_15.setPixmap(QtGui.QPixmap("a.png"))
     # ui.label_15.clear()
     # ui.label_15.setPixmap(1,0)
     pixmap = QPixmap('plot.png')
     ui.label_15.setPixmap(pixmap)
 
+def fileplot(labels,pet,aet):
+    x = np.arange(len(labels))  # the label locations
+    width = 0.35  # the width of the bars
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x - width/2, pet, width, label='pet')
+    rects2 = ax.bar(x + width/2, aet, width, label='aet')
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    # ax.set_ylabel('Scores')
+    ax.set_title('AET and PET')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels,rotation = 90)
+    ax.legend()
+
+    fig.tight_layout()
+    plt.savefig("plot.png", dpi=300, bbox_inches='tight')
+    plt.close()
 
 
 
