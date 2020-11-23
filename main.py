@@ -33,12 +33,14 @@ def SingleETOcalculator():
     ui.label_14.setText(str(ans))
 
 
-def plot(dates, all_vals):
+def plot(dates, all_vals, ylab):
     # df = pd.DataFrame(all_vals, index=dates)
     plt.bar(dates, height = all_vals)
     plt.xticks(rotation='vertical')
+    plt.xlabel('Date')
+    plt.ylabel(ylab)
     plt.savefig("plot.png", dpi=300, bbox_inches='tight')
-
+    plt.close()
     # plt.imsave(white, 'white.png', dpi=300, bbox_inches='tight')
     # x = [0, 2, 4, 6,10,11]
     # y = [1, 3, 4, 8,9,6]
@@ -53,6 +55,7 @@ def plot_individual():
     # filename = ui.label_13.text()
     global filename
     df = pd.read_csv(filename)
+    poss_labs = ["Pressure", "Temperature", "Dew point Temperature", "Relative Humidity","Wind Speed"]
     checked_op = None
     if ui.radioButton.isChecked(): #pressure
         checked_op=0
@@ -67,12 +70,12 @@ def plot_individual():
 
     vals = []
     dates = []    
-    for i in range(30):
+    for i in range(min(30,len(df))):
         if df.iloc[i,checked_op+3] is np.nan:
             continue
         vals.append(df.iloc[i,checked_op+3])
         dates.append(str(df.iloc[i,0])+"-" +str(df.iloc[i,1])+"-"+str(df.iloc[i,2]))
-    plot(dates, vals)
+    plot(dates, vals, poss_labs[checked_op])
     # ui.label_15.clear()
     # ui.label_15.setPixmap(1,0)
     pixmap = QPixmap('plot.png')
@@ -92,16 +95,20 @@ def FileETOcalculator():
     all_vals = []
     dates = []
     # for i in range(len(df)):
-    for i in range(30):
+    for i in range(min(30,len(df))):
         # print(float(df.iloc[i,0+3]),float(df.iloc[i,1+3]),float(df.iloc[i,2+3]),float(df.iloc[i,3+3]),float(df.iloc[i,4+3]),float(df.iloc[i,5+3]),float(df.iloc[i,6+3]))
         pet_tool = pet.PET(float(df.iloc[i,0+3]),float(df.iloc[i,1+3]),float(df.iloc[i,2+3]),float(df.iloc[i,3+3]),float(df.iloc[i,4+3]),float(df.iloc[i,5+3]),float(df.iloc[i,6+3]),None,None,None,None,True)
         ans = pet_tool.penman()
         if ans is not np.nan:
             all_vals.append(ans)
             dates.append(str(df.iloc[i,0])+"-"+str(df.iloc[i,1])+"-"+str(df.iloc[i,2]))
+        else:
+            all_vals.append(ans)
         # break
     # print(df)
-    plot(dates, all_vals)
+    df['ETo'] = all_vals
+    df.to_csv("output.csv")
+    plot(dates, all_vals, "ETo")
     # ui.label_15.setPixmap(QtGui.QPixmap("a.png"))
     # ui.label_15.clear()
     # ui.label_15.setPixmap(1,0)
